@@ -5,8 +5,81 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Calculadora Melhorada</title>
-    <link rel="stylesheet" href="style.css" />
-    <script src="script.js" defer></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Helvetica;
+      }
+      body {
+        background-color: #edc8e8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+      #calc {
+        width: 400px;
+        padding: 1em;
+        background-color: #c4c4c4;
+        color: #000;
+        display: flex;
+        flex-direction: column;
+        border-radius: 8px;
+      }
+      #calc h3 {
+        font-size: 1em;
+        font-weight: 400;
+        color: #333;
+        text-align: center;
+      }
+      #operations {
+        text-align: right;
+        padding: 10px;
+        background: #fff;
+        border-radius: 5px;
+        margin-bottom: 10px;
+      }
+      #previous-operation {
+        color: #777;
+        font-size: 1em;
+        min-height: 1.2em;
+      }
+      #current-operation {
+        font-size: 2em;
+        font-weight: bold;
+        min-height: 1.6em;
+      }
+      #buttons-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
+      }
+      #buttons-container button {
+        border: none;
+        height: 4em;
+        font-size: 1.2em;
+        background-color: #dbdbdb;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: 0.3s;
+      }
+      #buttons-container .number {
+        background-color: #f3f3f3;
+      }
+      #buttons-container button:hover {
+        background-color: #bababa;
+      }
+      #buttons-container #equal-btn {
+        grid-column: span 2;
+        background-color: #c74992;
+        color: white;
+      }
+      #buttons-container #equal-btn:hover {
+        background-color: #e1c3d1;
+      }
+    </style>
   </head>
   <body>
     <div id="calc">
@@ -37,5 +110,98 @@
         <button id="equal-btn">=</button>
       </div>
     </div>
+    <script>
+      const previousOperationText = document.querySelector("#previous-operation");
+      const currentOperationText = document.querySelector("#current-operation");
+      const buttons = document.querySelectorAll("#buttons-container button");
+
+      class Calculator {
+        constructor(previousOperationText, currentOperationText) {
+          this.previousOperationText = previousOperationText;
+          this.currentOperationText = currentOperationText;
+          this.currentOperation = "";
+        }
+
+        addDigit(digit) {
+          if (digit === "." && this.currentOperation.includes(".")) return;
+          this.currentOperation += digit;
+          this.currentOperationText.innerText = this.currentOperation;
+        }
+
+        processOperation(operation) {
+          if (this.currentOperation === "" && operation !== "C") {
+            if (this.previousOperationText.innerText !== "") {
+              this.changeOperation(operation);
+            }
+            return;
+          }
+
+          let operationValue;
+          let previous = parseFloat(this.previousOperationText.innerText.split(" ")[0]) || 0;
+          let current = parseFloat(this.currentOperation);
+
+          switch (operation) {
+            case "+":
+              operationValue = previous + current;
+              break;
+            case "-":
+              operationValue = previous - current;
+              break;
+            case "*":
+              operationValue = previous * current;
+              break;
+            case "/":
+              operationValue = current !== 0 ? previous / current : "Erro";
+              break;
+            case "DEL":
+              this.currentOperation = this.currentOperation.slice(0, -1);
+              this.currentOperationText.innerText = this.currentOperation;
+              return;
+            case "CE":
+              this.currentOperation = "";
+              this.currentOperationText.innerText = "";
+              return;
+            case "C":
+              this.currentOperation = "";
+              this.currentOperationText.innerText = "";
+              this.previousOperationText.innerText = "";
+              return;
+            case "=":
+              this.processOperation(this.previousOperationText.innerText.split(" ")[1]);
+              return;
+            default:
+              return;
+          }
+          this.updateScreen(operationValue, operation);
+        }
+
+        updateScreen(operationValue, operation) {
+          if (operationValue !== "Erro") {
+            this.previousOperationText.innerText = `${operationValue} ${operation}`;
+            this.currentOperationText.innerText = "";
+            this.currentOperation = "";
+          } else {
+            this.currentOperationText.innerText = "Erro";
+          }
+        }
+
+        changeOperation(operation) {
+          this.previousOperationText.innerText = this.previousOperationText.innerText.slice(0, -1) + operation;
+        }
+      }
+
+      const calc = new Calculator(previousOperationText, currentOperationText);
+
+      buttons.forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const value = e.target.innerText;
+          if (!isNaN(value) || value === ".") {
+            calc.addDigit(value);
+          } else {
+            calc.processOperation(value);
+          }
+        });
+      });
+    </script>
   </body>
 </html>
